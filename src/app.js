@@ -72,7 +72,7 @@ app.use((req, res, next) => {
   next(ApiError.notFound(`Route ${req.originalUrl} not found`));
 });
 
-// ── Global Error Handler ──────────────────────────────
+// ── Global Error Handler ──────────────────────────────Dula
 app.use(errorMiddleware);
 
 export default app;
