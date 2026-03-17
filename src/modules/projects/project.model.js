@@ -126,20 +126,20 @@ const projectSchema = new mongoose.Schema(
     },
 
     // ── Images ────────────────────────────────
-    images: [{
+    image: {
       url: {
         type: String,
-        required: true,
+        required: true, // Required field
       },
       publicId: {
         type: String,
-        required: true,
+        required: true, // Required field
       },
       originalName: {
         type: String,
-        required: true,
+        required: true, // Required field
       },
-    }],
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt
@@ -153,6 +153,15 @@ projectSchema.index({ category: 1, status: 1 });
 projectSchema.index({ skills: 1 });
 projectSchema.index({ "budget.minAmount": 1, "budget.maxAmount": 1 });
 projectSchema.index({ title: "text", description: "text" }); // For text search
+
+// ── Virtuals ────────────────────────────────────────────
+projectSchema.virtual("mainPhoto").get(function () {
+  return this.image ? this.image.url : null;
+});
+
+// Ensure virtuals are included in JSON output
+projectSchema.set("toJSON", { virtuals: true });
+projectSchema.set("toObject", { virtuals: true });
 
 const Project = mongoose.model("Project", projectSchema);
 

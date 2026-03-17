@@ -7,38 +7,41 @@ import { v2 as cloudinary } from "cloudinary";
 
 // ── Create Project ────────────────────────────────────────
 export const createProject = async (clientId, data, files = []) => {
-  const project = await Project.create({
-    ...data,
-    client: clientId,
-  });
-
-  // Upload images if provided
+  // Upload image first
+  let uploadedImage = null;
   if (files.length > 0) {
-    const images = await uploadProjectImages(project._id, files);
-    project.images = images;
-    await project.save();
+    uploadedImage = await uploadProjectImages(null, files); // Single image
+  } else {
+    // If no image provided, image field is required - throw error
+    throw ApiError.badRequest("Project image is required");
   }
 
+  // Create project with image
+  const projectData = {
+    ...data,
+    client: clientId,
+    image: uploadedImage,
+  };
+
+  const project = await Project.create(projectData);
   return project;
 };
 
 // ── Upload Project Images ────────────────────────────────
 export const uploadProjectImages = async (projectId, files) => {
-  const imageUrls = [];
+  if (files.length === 0) return null;
   
-  for (const file of files) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const publicId = `project-${projectId}-${uniqueSuffix}`;
-    
-    const result = await uploadToCloudinary(file.buffer, "allabina/projects", publicId);
-    imageUrls.push({
-      url: result.secure_url,
-      publicId: result.public_id,
-      originalName: file.originalname,
-    });
-  }
-
-  return imageUrls;
+  const file = files[0]; // Single image
+  const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  const publicId = `project-${projectId || 'new'}-${uniqueSuffix}`;
+  
+  const result = await uploadToCloudinary(file.buffer, "allabina/projects", publicId);
+  
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    originalName: file.originalname,
+  };
 };
 
 // ── Delete Project Image ─────────────────────────────────
@@ -46,7 +49,7 @@ export const deleteProjectImage = async (projectId, publicId) => {
   // Delete from Cloudinary
   await cloudinary.uploader.destroy(publicId);
   
-  // Remove from project
+  // Remove from project (set to null for single image)
   await Project.findByIdAndUpdate(
     projectId,
     { $pull: { images: { publicId } } }
@@ -249,7 +252,7 @@ export const updateProject = async (clientId, projectId, data, files = [], image
   }
 };
 
-// ── Delete Project ────────────────────────────────────────
+// ── Delete Project with Image Cleanup ───────────────────
 export const deleteProject = async (clientId, projectId) => {
   const session = await Project.startSession();
   
@@ -267,12 +270,9 @@ export const deleteProject = async (clientId, projectId) => {
         throw ApiError.badRequest("Cannot delete project that is in progress");
       }
 
-      // Delete all images from Cloudinary
-      if (project.images && project.images.length > 0) {
-        const deletePromises = project.images.map(image => 
-          cloudinary.uploader.destroy(image.publicId)
-        );
-        await Promise.all(deletePromises);
+      // Delete image from Cloudinary if project is being deleted
+      if (project.image && project.image.publicId) {
+        await cloudinary.uploader.destroy(project.image.publicId);
       }
 
       // Delete project from database

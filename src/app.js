@@ -67,6 +67,10 @@ app.use("/api/users", userRoutes);
 
 import profileRoutes from "./modules/profiles/profile.routes.js";
 app.use("/api/profiles", profileRoutes);
+
+import projectRoutes from "./modules/projects/project.routes.js";
+app.use("/api/projects", projectRoutes);
+
 // ── 404 Handler ───────────────────────────────────────
 app.use((req, res, next) => {
   next(ApiError.notFound(`Route ${req.originalUrl} not found`));
