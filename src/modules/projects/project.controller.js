@@ -76,7 +76,8 @@ export const updateProject = asyncHandler(async (req, res) => {
     req.params.id,
     req.body,
     req.files || [],
-    req.body.imagesToDelete ? JSON.parse(req.body.imagesToDelete) : []
+    req.body?.imagesToDelete ? JSON.parse(req.body.imagesToDelete) : [],
+    req.body?.attachmentsToDelete ? JSON.parse(req.body.attachmentsToDelete) : []
   );
 
   res.status(200).json({

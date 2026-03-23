@@ -23,8 +23,8 @@ router.get("/:id", validate(projectIdParamSchema), projectController.getProjectB
 router.use(protect);
 
 // Client Routes
-router.post("/", authorize(ROLES.CLIENT), upload.single("image"), validate(createProjectSchema), projectController.createProject);
-router.patch("/:id", authorize(ROLES.CLIENT), upload.single("image"), validate(updateProjectSchema), projectController.updateProject);
+router.post("/", authorize(ROLES.CLIENT), upload.array("files" , 10), validate(createProjectSchema), projectController.createProject);
+router.patch("/:id", authorize(ROLES.CLIENT), upload.array("files" , 10), validate(updateProjectSchema), projectController.updateProject);
 router.delete("/:id", authorize(ROLES.CLIENT), validate(projectIdParamSchema), projectController.deleteProject);
 
 export default router;
