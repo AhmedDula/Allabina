@@ -27,11 +27,10 @@ export const getProfileByUserId = async (userId) => {
   return profile;
 };
 
-// Update client profile
+
 export const updateClientProfile = async (userId, data) => {
   const profile = await Profile.findOne({ userId });
   if (!profile) throw ApiError.notFound("Profile not found");
-
   // Ensure client is updating client profile only
   if (profile.profileType !== ROLES.CLIENT) {
     throw ApiError.forbidden("Not a client profile");
