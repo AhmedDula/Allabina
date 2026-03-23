@@ -49,7 +49,6 @@ export const uploadAttachments = async (projectId, files) => {
       publicId,
       "raw"
     );
-
     return {
       publicId: result.public_id,
       url: result.secure_url,
@@ -57,7 +56,6 @@ export const uploadAttachments = async (projectId, files) => {
       size: result.bytes,
     };
   });
-
   return await Promise.all(uploadPromises);
 };
 
